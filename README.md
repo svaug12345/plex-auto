@@ -10,7 +10,10 @@ Mini-appli Android TV / Google TV qui ouvre automatiquement **Plex** ou le **das
 un écran stylisé « **Les tâches du jour sont faites ?** » avec les tâches du jour de chaque enfant
 (lues dans le Google Sheet « Family tasks »), puis deux boutons : *Voir le dashboard* ou *Plex*.
 
-Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.4.3**.
+Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.5.0**.
+
+> **Depuis la v1.5.0, chaque allumage ouvre TOUJOURS l'écran de rappel (Pass VIP TV).** Plex et le dashboard
+> s'ouvrent depuis ses boutons ; le choix de cible et l'interrupteur du rappel ont disparu des réglages.
 
 > Pour l'instant le rappel s'affiche **à chaque allumage**, sans horaire (`REMINDER_ALL_DAY = true` dans `Prefs.kt`).
 > Pour revenir au créneau 17h – 19h30 : passer cette constante à `false`.
@@ -120,6 +123,7 @@ adb logcat -s PlexAuto
 
 ## Historique
 
+- **1.5.0** — l'allumage ouvre toujours l'écran de rappel ; réglages simplifiés (plus de choix Plex/dashboard ni d'interrupteur du rappel ; l'adresse sert au bouton « Dashboard »).
 - **1.4.3** — « rattrapage » : après un démarrage complet (20 s et 40 s) ou un rallumage (8 s), le rappel ou le dashboard est remis devant s'il a été recouvert sans réponse ; copie de secours du rappel mise à jour (Non + alerte, boutons discrets).
 - **1.4.2** — le journal des événements est accessible à la télécommande (flèche bas après le dernier bouton).
 - **1.4.1** — journal des 20 derniers événements (démarrage, veille, rallumage, ouvertures) affiché dans les réglages, pour le diagnostic.

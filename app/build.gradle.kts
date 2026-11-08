@@ -18,8 +18,8 @@ android {
         // ⚠️ À incrémenter à chaque mise à jour :
         //   versionCode = entier qui DOIT augmenter pour que la TV accepte la mise à jour
         //   versionName = numéro lisible affiché à l'utilisateur
-        versionCode = 9
-        versionName = "1.4.3" // 1.4.3 : rappel remis devant si le menu Google TV le recouvre au démarrage
+        versionCode = 10
+        versionName = "1.5.0" // 1.5.0 : l'allumage ouvre toujours l'écran de rappel
     }
 
     // v1.4.0 : clé de signature FIXE. Android n'accepte une mise à jour que si elle est signée

@@ -28,22 +28,16 @@ object PlexLauncher {
     }
 
     /**
-     * Ouvre la cible choisie dans les réglages. Renvoie true si la demande a été envoyée.
+     * Ouvre l'écran prévu à l'allumage (depuis la v1.5.0 : toujours le rappel). Renvoie true si la demande a été envoyée.
      *
      * Remarque : depuis un service en arrière-plan, Android bloque silencieusement
      * l'ouverture si l'appli n'a pas la permission "afficher par-dessus les autres applis".
      * C'est vrai pour Plex comme pour notre propre écran Dashboard. D'où la commande ADB du README.
      */
     fun launchTarget(context: Context): Boolean {
-        // 1.2.0 : pendant le créneau du rappel, on pose d'abord la question des tâches.
-        // C'est cet écran qui proposera ensuite Plex ou le dashboard.
-        if (Prefs.isReminderEnabled(context) && Prefs.isInReminderWindow()) {
-            return launchTaskCheck(context)
-        }
-        return when (Prefs.target(context)) {
-            Prefs.Target.PLEX -> launchPlex(context)
-            Prefs.Target.DASHBOARD -> launchDashboard(context)
-        }
+        // v1.5.0 : à chaque allumage, c'est TOUJOURS l'écran de rappel (Pass VIP TV).
+        // Plex et le dashboard ne s'ouvrent plus que depuis les boutons de ce rappel.
+        return launchTaskCheck(context)
     }
 
     /** Ouvre l'écran « Est-ce que les tâches sont faites ? ». */
@@ -63,9 +57,7 @@ object PlexLauncher {
      * Seuls ceux-là peuvent être « relancés » : on ne sait pas savoir si Plex est à l'écran,
      * et le rouvrir pendant un film le ramènerait à son accueil.
      */
-    fun ownScreenWanted(context: Context): Boolean =
-        (Prefs.isReminderEnabled(context) && Prefs.isInReminderWindow()) ||
-            Prefs.target(context) == Prefs.Target.DASHBOARD
+    fun ownScreenWanted(@Suppress("UNUSED_PARAMETER") context: Context): Boolean = true // v1.5.0 : toujours le rappel
 
     /** Ouvre Plex. */
     fun launchPlex(context: Context): Boolean {

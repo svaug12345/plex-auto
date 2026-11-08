@@ -46,7 +46,8 @@ object Prefs {
      *  (le créneau ci-dessus est alors ignoré). Repasser à false pour réactiver le créneau. */
     const val REMINDER_ALL_DAY = true
 
-    /** Ce qu'on ouvre automatiquement : Plex ou le dashboard famille. */
+    /** Ce qu'on ouvrait automatiquement avant la v1.5.0 (Plex ou le dashboard).
+     *  N'est plus utilisé : depuis la v1.5.0, l'allumage ouvre toujours le rappel. */
     enum class Target { PLEX, DASHBOARD }
 
     private const val FILE = "plexauto_prefs"

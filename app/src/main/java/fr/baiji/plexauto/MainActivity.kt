@@ -27,9 +27,7 @@ class MainActivity : Activity() {
     private lateinit var statusText: TextView
     private lateinit var eventsText: TextView // v1.4.1 : derniers événements
     private lateinit var toggleButton: Button
-    private lateinit var targetButton: Button
     private lateinit var urlField: EditText
-    private lateinit var reminderButton: Button
     private lateinit var updateButton: Button
 
     /** v1.4.0 : dernière version trouvée sur GitHub (null = pas encore vérifié ou déjà à jour). */
@@ -69,17 +67,8 @@ class MainActivity : Activity() {
             }
         }
 
-        // Bouton qui bascule la cible : Plex ⇄ Dashboard
-        targetButton = Button(this).apply {
-            setOnClickListener {
-                val next = if (Prefs.target(this@MainActivity) == Prefs.Target.PLEX)
-                    Prefs.Target.DASHBOARD else Prefs.Target.PLEX
-                Prefs.setTarget(this@MainActivity, next)
-                refresh()
-            }
-        }
-
-        // Champ de saisie de l'adresse du dashboard (le clavier de la TV s'ouvre en cliquant dessus)
+        // Adresse ouverte par le bouton discret « Dashboard » du rappel
+        // (le clavier de la TV s'ouvre en cliquant dessus)
         urlField = EditText(this).apply {
             setText(Prefs.dashboardUrl(this@MainActivity))
             setTextColor(Color.WHITE)
@@ -89,14 +78,6 @@ class MainActivity : Activity() {
             // Quand on valide au clavier ("OK"/"Terminé"), on enregistre l'adresse
             setOnEditorActionListener { _, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_DONE) { saveUrl(); true } else false
-            }
-        }
-
-        // Bouton qui active / désactive le rappel des tâches (17h – 19h30)
-        reminderButton = Button(this).apply {
-            setOnClickListener {
-                Prefs.setReminderEnabled(this@MainActivity, !Prefs.isReminderEnabled(this@MainActivity))
-                refresh()
             }
         }
 
@@ -110,7 +91,7 @@ class MainActivity : Activity() {
             }
         }
 
-        // Bouton de test : ouvre la cible tout de suite
+        // Bouton de test : ouvre l'écran de rappel tout de suite
         val testButton = Button(this).apply {
             text = getString(R.string.btn_test)
             setOnClickListener {
@@ -124,9 +105,7 @@ class MainActivity : Activity() {
         root.addView(title)
         root.addView(statusText)
         root.addView(toggleButton)
-        root.addView(targetButton)
         root.addView(urlField)
-        root.addView(reminderButton)
         root.addView(testButton)
         root.addView(updateButton)
 
@@ -233,31 +212,19 @@ class MainActivity : Activity() {
         urlField.setText(url)
     }
 
-    /** Met à jour les textes selon l'état réel (cible, Plex installé, permission accordée…). */
+    /** Met à jour les textes selon l'état réel (Plex installé, permissions…). */
     private fun refresh() {
         val enabled = Prefs.isEnabled(this)
-        val target = Prefs.target(this)
         val plexOk = PlexLauncher.isInstalled(this)
         // canDrawOverlays = la permission "afficher par-dessus" a-t-elle été accordée (via ADB) ?
         val overlayOk = Settings.canDrawOverlays(this)
 
         statusText.text = buildString {
             appendLine(if (enabled) "✅ Automatisme activé" else "⏸️ Automatisme désactivé")
-            appendLine(
-                if (target == Prefs.Target.PLEX) "🎬 Cible : Plex"
-                else "🏠 Cible : dashboard famille (adresse ci-dessous)"
-            )
-            appendLine(
-                if (Prefs.isReminderEnabled(this@MainActivity))
-                    "❓ Rappel des tâches ${Prefs.reminderWindowLabel()} : activé" +
-                        // "(en cours maintenant)" n'a de sens que si un créneau horaire est actif
-                        (if (!Prefs.REMINDER_ALL_DAY && Prefs.isInReminderWindow()) " (en cours maintenant)" else "")
-                else "❓ Rappel des tâches : désactivé"
-            )
-            // L'état de Plex n'a d'intérêt que si c'est la cible
-            if (target == Prefs.Target.PLEX) {
-                appendLine(if (plexOk) "✅ Plex est installé" else "❌ Plex n'est pas installé")
-            }
+            // v1.5.0 : à chaque allumage, c'est toujours l'écran de rappel
+            appendLine("🎟️ À l'allumage : écran de rappel (Pass VIP TV)")
+            // Plex reste utile : c'est le bouton « Oui, oui, je le jure ! » du rappel
+            appendLine(if (plexOk) "✅ Plex est installé" else "❌ Plex n'est pas installé")
             appendLine(
                 if (overlayOk) "✅ Permission « par-dessus les autres applis » accordée"
                 else "❌ Permission manquante : sans elle, Android bloque l'ouverture automatique.\n" +
@@ -275,15 +242,6 @@ class MainActivity : Activity() {
         val events = EventLog.read(this)
         eventsText.text = "Derniers événements :\n" +
             (if (events.isEmpty()) "(aucun pour l'instant)" else events.joinToString("\n"))
-        targetButton.text = getString(
-            if (target == Prefs.Target.PLEX) R.string.btn_to_dashboard else R.string.btn_to_plex
-        )
-        reminderButton.text = getString(
-            if (Prefs.isReminderEnabled(this)) R.string.btn_reminder_off else R.string.btn_reminder_on
-        )
-        // Le champ d'adresse ne sert que pour le dashboard
-        urlField.isEnabled = target == Prefs.Target.DASHBOARD
-        urlField.alpha = if (target == Prefs.Target.DASHBOARD) 1f else 0.4f
     }
 
     /** Convertit des "dp" (unités indépendantes de la densité) en pixels réels. */
