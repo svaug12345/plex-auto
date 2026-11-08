@@ -135,12 +135,14 @@ class TaskCheckActivity : Activity() {
     inner class Bridge {
         @JavascriptInterface
         fun openPlex() = runOnUiThread {
+            ScreenState.markUserLeft() // réponse donnée : pas de relance automatique
             PlexLauncher.launchPlex(this@TaskCheckActivity)
             finish() // on ferme le rappel pour qu'il ne reste pas "derrière" Plex
         }
 
         @JavascriptInterface
         fun openDashboard() = runOnUiThread {
+            ScreenState.markUserLeft() // réponse donnée : pas de relance automatique
             PlexLauncher.launchDashboard(this@TaskCheckActivity)
             finish()
         }
@@ -148,6 +150,7 @@ class TaskCheckActivity : Activity() {
         /** v1.4.0 : bouton discret « Menu TV » → écran d'accueil habituel de Google TV. */
         @JavascriptInterface
         fun openHome() = runOnUiThread {
+            ScreenState.markUserLeft() // réponse donnée : pas de relance automatique
             PlexLauncher.launchHome(this@TaskCheckActivity)
             finish()
         }
@@ -161,6 +164,24 @@ class TaskCheckActivity : Activity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) return true
         return super.onKeyDown(keyCode, event)
+    }
+
+    // v1.4.3 : on signale au service si le rappel est visible ou non
+    override fun onResume() {
+        super.onResume()
+        ScreenState.ownScreenShowing = true
+    }
+
+    override fun onPause() {
+        ScreenState.ownScreenShowing = false
+        super.onPause()
+    }
+
+    /** Appelé quand l'utilisateur quitte l'écran lui-même (bouton Accueil de la télécommande). */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        ScreenState.markUserLeft()
+        EventLog.add(this, "Rappel quitté par l'utilisateur")
     }
 
     override fun onDestroy() {

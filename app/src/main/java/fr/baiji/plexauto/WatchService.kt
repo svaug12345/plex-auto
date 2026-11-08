@@ -44,6 +44,34 @@ class WatchService : Service() {
         }
     }
 
+    /** v1.4.3 : moment de la dernière ouverture automatique (démarrage ou rallumage). */
+    private var autoLaunchAt = 0L
+
+    /**
+     * v1.4.3 : « rattrapage ». Quelques secondes après l'ouverture automatique, on vérifie
+     * que notre écran (rappel ou dashboard) est toujours visible. S'il a été recouvert
+     * (le menu Google TV finit de se charger après nous lors d'un démarrage complet)
+     * et que personne ne l'a quitté volontairement depuis, on le remet devant.
+     */
+    private val retryRunnable = Runnable {
+        val coveredByAnotherApp = !ScreenState.ownScreenShowing
+        val userAnsweredSince = ScreenState.userLeftAt >= autoLaunchAt
+        if (Prefs.isEnabled(this) && PlexLauncher.ownScreenWanted(this) &&
+            coveredByAnotherApp && !userAnsweredSince
+        ) {
+            EventLog.add(this, "Écran recouvert par une autre appli → remis devant")
+            PlexLauncher.launchTarget(this)
+        }
+    }
+
+    /** Programme les vérifications de rattrapage (en annulant les précédentes). */
+    private fun scheduleRetries(vararg delaysMs: Long) {
+        autoLaunchAt = SystemClock.elapsedRealtime()
+        handler.removeCallbacks(retryRunnable)
+        // On peut poster plusieurs fois le même Runnable : il s'exécutera à chaque délai
+        for (d in delaysMs) handler.postDelayed(retryRunnable, d)
+    }
+
     /** Récepteur qui écoute le rallumage de l'écran (sortie de veille). */
     private val screenOnReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -51,9 +79,15 @@ class WatchService : Service() {
                 Intent.ACTION_SCREEN_ON -> {
                     EventLog.add(context, "Écran rallumé → ouverture dans ${Prefs.DELAY_AFTER_WAKE_MS / 1000} s")
                     scheduleLaunch(Prefs.DELAY_AFTER_WAKE_MS)
+                    scheduleRetries(8_000)
                 }
                 // v1.4.1 : noté seulement pour le diagnostic (vérifier que la TV prévient bien)
-                Intent.ACTION_SCREEN_OFF -> EventLog.add(context, "Écran éteint (veille)")
+                Intent.ACTION_SCREEN_OFF -> {
+                    EventLog.add(context, "Écran éteint (veille)")
+                    // TV éteinte : plus besoin d'ouvrir ni de rattraper quoi que ce soit
+                    handler.removeCallbacks(launchRunnable)
+                    handler.removeCallbacks(retryRunnable)
+                }
             }
         }
     }
@@ -91,6 +125,7 @@ class WatchService : Service() {
         if (intent?.getBooleanExtra(EXTRA_LAUNCH_AFTER_BOOT, false) == true) {
             EventLog.add(this, "Démarrage TV → ouverture dans ${Prefs.DELAY_AFTER_BOOT_MS / 1000} s")
             scheduleLaunch(Prefs.DELAY_AFTER_BOOT_MS)
+            scheduleRetries(20_000, 40_000)
         }
         // START_STICKY : si Android tue le service par manque de mémoire, il le relance seul.
         return START_STICKY
@@ -106,6 +141,7 @@ class WatchService : Service() {
         // On se désabonne proprement, sinon Android signale une "fuite" de récepteur.
         EventLog.add(this, "Surveillance arrêtée")
         handler.removeCallbacks(launchRunnable)
+        handler.removeCallbacks(retryRunnable)
         unregisterReceiver(screenOnReceiver)
         super.onDestroy()
     }

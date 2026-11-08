@@ -58,6 +58,15 @@ object PlexLauncher {
         return start(context, intent, "Question des tâches")
     }
 
+    /**
+     * v1.4.3 : la prochaine ouverture concerne-t-elle UN DE NOS écrans (rappel ou dashboard) ?
+     * Seuls ceux-là peuvent être « relancés » : on ne sait pas savoir si Plex est à l'écran,
+     * et le rouvrir pendant un film le ramènerait à son accueil.
+     */
+    fun ownScreenWanted(context: Context): Boolean =
+        (Prefs.isReminderEnabled(context) && Prefs.isInReminderWindow()) ||
+            Prefs.target(context) == Prefs.Target.DASHBOARD
+
     /** Ouvre Plex. */
     fun launchPlex(context: Context): Boolean {
         val intent = buildPlexIntent(context) ?: run {

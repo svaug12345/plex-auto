@@ -95,11 +95,30 @@ class DashboardActivity : Activity() {
             webView.goBack()
             return true
         }
+        // Retour sans page précédente = on ferme le dashboard volontairement
+        if (keyCode == KeyEvent.KEYCODE_BACK) ScreenState.markUserLeft()
         if (keyCode == KeyEvent.KEYCODE_MENU) {
             webView.reload()
             return true
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    // v1.4.3 : on signale au service si le dashboard est visible ou non
+    override fun onResume() {
+        super.onResume()
+        ScreenState.ownScreenShowing = true
+    }
+
+    override fun onPause() {
+        ScreenState.ownScreenShowing = false
+        super.onPause()
+    }
+
+    /** Appelé quand l'utilisateur quitte l'écran lui-même (bouton Accueil de la télécommande). */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        ScreenState.markUserLeft()
     }
 
     override fun onDestroy() {
