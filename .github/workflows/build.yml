@@ -1,6 +1,10 @@
 # Compilation automatique de l'APK sur les serveurs de GitHub.
 # À chaque "push" sur main (ou en lançant le workflow à la main depuis l'onglet Actions),
 # GitHub compile l'appli et met l'APK à disposition en téléchargement.
+#
+# v1.4.0 : l'APK est signé avec la clé fixe (secrets KEYSTORE_B64 + KEYSTORE_PASSWORD),
+# puis publié dans une « Release » (étiquette v<versionName>). C'est là que le bouton
+# « Mettre à jour » de l'appli va chercher les nouvelles versions.
 
 name: Build APK
 
@@ -9,9 +13,21 @@ on:
     branches: [ main ]
   workflow_dispatch: # bouton "Run workflow" dans l'onglet Actions
 
+# Droit d'écrire dans le dépôt : nécessaire pour créer les Releases
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest # machine Linux fournie par GitHub, SDK Android déjà installé
+
+    env:
+      # Clé de signature (fichier encodé en base64) et son mot de passe, lus dans les secrets
+      # du dépôt : ils ne sont jamais écrits dans le code ni affichés dans les journaux.
+      # S'ils manquent, l'APK est signé avec une clé de debug et n'est PAS publié en Release
+      # (sinon la TV refuserait la mise à jour : clé différente).
+      KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
 
     steps:
       - name: Récupérer le code
@@ -31,11 +47,37 @@ jobs:
       - name: Rendre gradlew exécutable
         run: chmod +x gradlew
 
+      # Recrée le fichier de clé dans un dossier temporaire de la machine (effacé après le build)
+      # et indique son chemin à Gradle via KEYSTORE_FILE.
+      - name: Préparer la clé de signature
+        if: env.KEYSTORE_B64 != '' && env.KEYSTORE_PASSWORD != ''
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/plexauto.jks"
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/plexauto.jks" >> "$GITHUB_ENV"
+
       - name: Compiler l'APK
         run: ./gradlew assembleDebug
 
-      - name: Publier l'APK
+      - name: Publier l'APK (artefact)
         uses: actions/upload-artifact@v5
         with:
           name: PlexAuto-apk
           path: app/build/outputs/apk/debug/*.apk
+
+      # Crée la Release "v1.4.0" (par ex.) si elle n'existe pas encore.
+      # Une version déjà publiée n'est jamais écrasée : pour publier, on incrémente versionName.
+      - name: Publier la version (Release GitHub)
+        if: env.KEYSTORE_FILE != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Lit versionName dans app/build.gradle.kts (ex. 1.4.0)
+          V=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          if gh release view "v$V" > /dev/null 2>&1; then
+            echo "La version v$V est déjà publiée : rien à faire."
+          else
+            cp app/build/outputs/apk/debug/app-debug.apk DemarrageAuto.apk
+            gh release create "v$V" DemarrageAuto.apk \
+              --title "Démarrage Auto v$V" \
+              --notes "Version $V — voir l'historique dans le README."
+          fi

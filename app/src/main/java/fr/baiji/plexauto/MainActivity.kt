@@ -28,6 +28,10 @@ class MainActivity : Activity() {
     private lateinit var targetButton: Button
     private lateinit var urlField: EditText
     private lateinit var reminderButton: Button
+    private lateinit var updateButton: Button
+
+    /** v1.4.0 : dernière version trouvée sur GitHub (null = pas encore vérifié ou déjà à jour). */
+    private var pendingRelease: Updater.Release? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,6 +98,16 @@ class MainActivity : Activity() {
             }
         }
 
+        // v1.4.0 : bouton de mise à jour. 1er clic = vérifier ; s'il y a mieux, il devient
+        // « Installer la version X » et le clic suivant télécharge et installe.
+        updateButton = Button(this).apply {
+            text = getString(R.string.btn_update_check)
+            setOnClickListener {
+                val release = pendingRelease
+                if (release == null) checkForUpdate(showResult = true) else installUpdate(release)
+            }
+        }
+
         // Bouton de test : ouvre la cible tout de suite
         val testButton = Button(this).apply {
             text = getString(R.string.btn_test)
@@ -112,6 +126,7 @@ class MainActivity : Activity() {
         root.addView(urlField)
         root.addView(reminderButton)
         root.addView(testButton)
+        root.addView(updateButton)
         setContentView(root)
 
         // Si l'automatisme est actif, on s'assure que le service tourne
@@ -125,7 +140,59 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         refresh()
+        // v1.4.0 : vérification discrète à l'ouverture (sans message si déjà à jour)
+        if (pendingRelease == null) checkForUpdate(showResult = false)
     }
+
+    /**
+     * v1.4.0 : demande à GitHub s'il existe une version plus récente.
+     * Le réseau se fait dans un Thread ; l'affichage revient sur le fil principal (runOnUiThread).
+     * @param showResult true = afficher aussi « Déjà à jour » / « Impossible de vérifier »
+     */
+    private fun checkForUpdate(showResult: Boolean) {
+        if (showResult) updateButton.text = getString(R.string.btn_update_checking)
+        Thread {
+            val latest = Updater.fetchLatest()
+            runOnUiThread {
+                if (isFinishing) return@runOnUiThread
+                when {
+                    latest == null -> {
+                        updateButton.text = getString(R.string.btn_update_check)
+                        if (showResult) toast("Impossible de vérifier (réseau ou GitHub indisponible)")
+                    }
+                    Updater.isNewer(latest.version, versionName()) -> {
+                        pendingRelease = latest
+                        updateButton.text = getString(R.string.btn_update_install, latest.version)
+                    }
+                    else -> {
+                        updateButton.text = getString(R.string.btn_update_check)
+                        if (showResult) toast("Déjà à jour (v${versionName()})")
+                    }
+                }
+            }
+        }.start()
+    }
+
+    /** v1.4.0 : télécharge et installe la version trouvée, avec le pourcentage sur le bouton. */
+    private fun installUpdate(release: Updater.Release) {
+        updateButton.isEnabled = false
+        Thread {
+            try {
+                Updater.downloadAndInstall(this, release) { pct ->
+                    runOnUiThread { updateButton.text = getString(R.string.btn_update_progress, pct) }
+                }
+                // La suite (écran de confirmation d'Android) est gérée par InstallReceiver
+            } catch (e: Exception) {
+                runOnUiThread {
+                    updateButton.isEnabled = true
+                    updateButton.text = getString(R.string.btn_update_install, release.version)
+                    toast("Échec du téléchargement : ${e.message}")
+                }
+            }
+        }.start()
+    }
+
+    private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
 
     // En quittant l'écran, on enregistre l'adresse même si on n'a pas validé au clavier
     override fun onPause() {
@@ -170,7 +237,13 @@ class MainActivity : Activity() {
             appendLine(
                 if (overlayOk) "✅ Permission « par-dessus les autres applis » accordée"
                 else "❌ Permission manquante : sans elle, Android bloque l'ouverture automatique.\n" +
-                    "   Depuis le PC : adb shell appops set $packageName SYSTEM_ALERT_WINDOW allow"
+                    "   Commande ADB : appops set $packageName SYSTEM_ALERT_WINDOW allow"
+            )
+            // v1.4.0 : l'appli a-t-elle le droit d'installer ses mises à jour ?
+            appendLine(
+                if (packageManager.canRequestPackageInstalls()) "✅ Mises à jour depuis la TV autorisées"
+                else "⚠️ Mises à jour depuis la TV pas encore autorisées.\n" +
+                    "   Commande ADB : appops set $packageName REQUEST_INSTALL_PACKAGES allow"
             )
         }
         toggleButton.text = getString(if (enabled) R.string.btn_disable else R.string.btn_enable)

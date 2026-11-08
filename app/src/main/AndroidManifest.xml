@@ -14,6 +14,10 @@
     <!-- Accès à Internet, pour afficher le dashboard famille (v1.1.0) -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- v1.4.0 : installer ses propres mises à jour (bouton « Mettre à jour » des réglages).
+         Il faut aussi autoriser l'appli comme « source inconnue » (voir README). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <!-- Être prévenu quand la TV a fini de démarrer (vrai démarrage, pas la sortie de veille) -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
@@ -81,6 +85,11 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <!-- v1.4.0 : réponse de l'installateur d'Android lors d'une mise à jour -->
+        <receiver
+            android:name=".InstallReceiver"
+            android:exported="false" />
 
         <!-- Le service qui surveille les sorties de veille et lance Plex -->
         <service

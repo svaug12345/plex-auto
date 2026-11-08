@@ -83,6 +83,17 @@ object PlexLauncher {
         return start(context, intent, "Dashboard")
     }
 
+    /**
+     * v1.4.0 : ouvre l'écran d'accueil de la TV (Google TV, ou Projectivy s'il est l'accueil),
+     * exactement comme le bouton Maison de la télécommande.
+     */
+    fun launchHome(context: Context): Boolean {
+        val intent = Intent(Intent.ACTION_MAIN)
+            .addCategory(Intent.CATEGORY_HOME) // "HOME" = l'appli qui sert d'écran d'accueil
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return start(context, intent, "Accueil TV")
+    }
+
     /** Envoie la demande d'ouverture au système, en attrapant les erreurs pour ne jamais planter. */
     private fun start(context: Context, intent: Intent, label: String): Boolean = try {
         context.startActivity(intent)

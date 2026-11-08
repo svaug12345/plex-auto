@@ -18,11 +18,36 @@ android {
         // ⚠️ À incrémenter à chaque mise à jour :
         //   versionCode = entier qui DOIT augmenter pour que la TV accepte la mise à jour
         //   versionName = numéro lisible affiché à l'utilisateur
-        versionCode = 5
-        versionName = "1.3.1" // 1.3.1 : rappel à chaque allumage, bouton « Oui, oui, je le jure ! »
+        versionCode = 6
+        versionName = "1.4.0" // 1.4.0 : rappel sur baiji.fr, bouton Menu TV, mise à jour depuis la TV
+    }
+
+    // v1.4.0 : clé de signature FIXE. Android n'accepte une mise à jour que si elle est signée
+    // avec la même clé que la version installée ; avant, chaque build GitHub avait une clé
+    // différente, d'où les « installation refusée ».
+    // La clé n'est JAMAIS dans le dépôt : le workflow GitHub la recrée à partir du secret
+    // KEYSTORE_B64, l'écrit dans un fichier temporaire et donne son chemin (KEYSTORE_FILE)
+    // et son mot de passe (secret KEYSTORE_PASSWORD) via des variables d'environnement.
+    val keystoreFile: String? = System.getenv("KEYSTORE_FILE")
+    val keystorePassword: String? = System.getenv("KEYSTORE_PASSWORD")
+    val hasFixedKey = !keystoreFile.isNullOrBlank() && !keystorePassword.isNullOrBlank()
+
+    signingConfigs {
+        if (hasFixedKey) {
+            create("fixe") {
+                storeFile = file(keystoreFile!!)
+                storePassword = keystorePassword
+                keyAlias = "plexauto"
+                keyPassword = keystorePassword
+            }
+        }
     }
 
     buildTypes {
+        getByName("debug") {
+            // Sans la clé (ex. build dans Android Studio), on garde la clé de debug habituelle
+            if (hasFixedKey) signingConfig = signingConfigs.getByName("fixe")
+        }
         release {
             isMinifyEnabled = false // pas d'obfuscation : l'appli est minuscule
         }

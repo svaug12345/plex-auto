@@ -6,3 +6,7 @@ local.properties
 .idea/
 *.iml
 .DS_Store
+
+# Clé de signature : JAMAIS dans le dépôt (elle est dans les secrets GitHub)
+*.jks
+*.keystore

@@ -18,6 +18,13 @@ object Prefs {
     /** Ancienne valeur par défaut (v1.1.0 – v1.2.0), remplacée automatiquement par la nouvelle. */
     private const val OLD_DEFAULT_URL = "https://baiji.fr/"
 
+    /** v1.4.0 : écran de rappel hébergé sur le site. Le modifier sur baiji.fr suffit,
+     *  sans mettre à jour l'appli. La copie de l'APK (assets/rappel.html) sert si le Wi-Fi manque. */
+    const val REMINDER_URL = "https://baiji.fr/famille/rappel.html"
+
+    /** v1.4.0 : dernière version publiée de l'appli (API GitHub, dépôt public, sans compte). */
+    const val LATEST_RELEASE_API = "https://api.github.com/repos/svaug12345/plex-auto/releases/latest"
+
     /** Google Sheet « Family tasks » publié en TSV : le même lien que le dashboard et le Kindle.
      *  Colonnes : A Mois | B Jour | C Date (JJ/MM/AAAA) | D Qui | E Tâches */
     const val TASKS_TSV_URL =

@@ -14,5 +14,10 @@
     <!-- Textes de l'écran de rappel : depuis la v1.3.0, ils sont dans assets/rappel.html -->
     <string name="btn_reminder_on">Activer le rappel des tâches</string>
     <string name="btn_reminder_off">Désactiver le rappel des tâches</string>
+    <!-- v1.4.0 : mise à jour depuis la TV. %1$s = numéro de version, %1$d = pourcentage -->
+    <string name="btn_update_check">Rechercher une mise à jour</string>
+    <string name="btn_update_checking">Recherche en cours…</string>
+    <string name="btn_update_install">⬆️ Installer la version %1$s</string>
+    <string name="btn_update_progress">Téléchargement… %1$d %%</string>
     <string name="plex_missing">Impossible d\'ouvrir la cible (Plex introuvable ?)</string>
 </resources>

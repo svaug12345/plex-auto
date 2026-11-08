@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <!--
-  rappel.html — écran « Les tâches du jour sont faites ? » affiché sur la TV
-  entre 17h00 et 19h30, à l'allumage.
+  rappel.html — v1.1.0 — écran « Les tâches du jour sont faites ? » affiché sur la TV
+  à l'allumage, par l'appli Android « Démarrage Auto » (dépôt svaug12345/plex-auto).
 
-  Ce fichier est embarqué DANS l'APK (dossier assets) : il s'affiche instantanément,
-  même si le Wi-Fi n'est pas encore prêt. Les tâches, elles, sont téléchargées par
-  le code Kotlin (TaskCheckActivity) puis transmises à la fonction showTasks() ci-dessous.
+  Ce fichier existe en DEUX exemplaires identiques :
+    • baiji.fr/famille/rappel.html (dépôt du site) : c'est lui que la TV charge en priorité.
+      → modifier CE fichier suffit pour changer le texte ou le style, sans mettre à jour l'appli ;
+    • app/src/main/assets/rappel.html (dans l'APK) : copie de secours si le Wi-Fi n'est pas prêt.
+  Les tâches sont téléchargées par le code Kotlin (TaskCheckActivity) puis transmises
+  à la fonction showTasks() ci-dessous. Les boutons appellent l'objet « Android » fourni par l'appli.
+
+  Historique :
+    • v1.0.0 : première version (dans l'APK seulement)
+    • v1.1.0 : hébergée sur baiji.fr ; bouton discret « Menu TV » (retour à l'accueil Google TV)
 
   Les couleurs, la police et les pictogrammes reprennent ceux du dashboard famille
   (baiji.fr/famille, mode TV) pour que tout ait le même style.
@@ -14,7 +21,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
   <title>Rappel des tâches</title>
+  <!-- Compteur de visites du site (n'envoie rien hors de *.baiji.fr, donc rien depuis l'APK) -->
+  <script src="/journal.js" defer></script>
 
   <!-- Même police que le dashboard. Si la TV est hors ligne, on retombe sur la police système. -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -132,6 +142,17 @@
       outline: none;
     }
     /* :focus = le bouton sélectionné avec la croix directionnelle : il doit se voir de loin */
+    /* Bouton discret « Menu TV » : petit, en bas à droite, presque invisible…
+       sauf quand on le sélectionne à la télécommande. */
+    #btn-home {
+      position: fixed; right: 2vw; bottom: 2vh;
+      font-size: 1.1vw; font-weight: 600;
+      padding: .8vh 1.2vw;
+      border-width: .15vw;
+      opacity: .35;
+    }
+    #btn-home:focus { opacity: 1; transform: scale(1.05); }
+
     button:focus {
       border-color: var(--accent);
       background: #0f3b40;
@@ -157,6 +178,9 @@
     <button id="btn-dashboard" onclick="Android.openDashboard()">🏠 Voir le dashboard</button>
     <button id="btn-plex" onclick="Android.openPlex()">🎬 Oui, oui, je le jure ! → Plex</button>
   </footer>
+
+  <!-- Caché par défaut : affiché seulement si l'appli sait le gérer (voir plus bas) -->
+  <button id="btn-home" onclick="Android.openHome()" hidden>Menu TV ›</button>
 
   <script>
     /* ================= Petits utilitaires ================= */
@@ -261,6 +285,9 @@
       // Focus initial sur « Voir le dashboard » : on pousse à vérifier avant le film 😉
       $('btn-dashboard').focus();
     }
+
+    // Les anciennes versions de l'appli n'ont pas openHome() : on ne montre le bouton que s'il marche.
+    if (window.Android && typeof Android.openHome === 'function') $('btn-home').hidden = false;
 
     // Focus de départ, avant même l'arrivée des tâches
     $('btn-dashboard').focus();
