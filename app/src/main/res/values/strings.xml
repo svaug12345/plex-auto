@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Textes de l'appli, centralisés ici (facile à traduire ou modifier) -->
+<resources>
+    <!-- Nom affiché sur la TV. L'identifiant technique reste fr.baiji.plexauto
+         pour que la 1.1.0 s'installe par-dessus la 1.0.0 sans tout réinstaller. -->
+    <string name="app_name">Démarrage Auto</string>
+    <string name="channel_name">Surveillance de la mise en veille</string>
+    <string name="notif_text">Prêt à ouvrir l\'appli choisie au rallumage de la TV</string>
+    <string name="btn_enable">Activer le lancement automatique</string>
+    <string name="btn_disable">Désactiver le lancement automatique</string>
+    <string name="btn_to_dashboard">Ouvrir plutôt le dashboard famille</string>
+    <string name="btn_to_plex">Ouvrir plutôt Plex</string>
+    <string name="btn_test">Tester : ouvrir maintenant</string>
+    <!-- v1.2.0 : écran de rappel des tâches -->
+    <string name="task_question">Est-ce que les tâches sont faites ?? 🤔</string>
+    <string name="task_hint">Vérifie sur le dashboard avant de lancer un film !</string>
+    <string name="task_btn_dashboard">🏠 Voir le dashboard</string>
+    <string name="task_btn_plex">🎬 Oui, aller sur Plex</string>
+    <string name="btn_reminder_on">Activer le rappel des tâches</string>
+    <string name="btn_reminder_off">Désactiver le rappel des tâches</string>
+    <string name="plex_missing">Impossible d\'ouvrir la cible (Plex introuvable ?)</string>
+</resources>

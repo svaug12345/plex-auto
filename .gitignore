@@ -1,0 +1,8 @@
+# Fichiers générés par la compilation : jamais dans Git
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+.DS_Store

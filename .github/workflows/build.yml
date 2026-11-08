@@ -1,0 +1,41 @@
+# Compilation automatique de l'APK sur les serveurs de GitHub.
+# À chaque "push" sur main (ou en lançant le workflow à la main depuis l'onglet Actions),
+# GitHub compile l'appli et met l'APK à disposition en téléchargement.
+
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # bouton "Run workflow" dans l'onglet Actions
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # machine Linux fournie par GitHub, SDK Android déjà installé
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Préparer Gradle (avec cache pour accélérer les builds suivants)
+        uses: gradle/actions/setup-gradle@v4
+
+      # Si les fichiers ont été envoyés via le site GitHub, le droit d'exécution du script saute :
+      # on le remet systématiquement.
+      - name: Rendre gradlew exécutable
+        run: chmod +x gradlew
+
+      - name: Compiler l'APK
+        run: ./gradlew assembleDebug
+
+      - name: Publier l'APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlexAuto-apk
+          path: app/build/outputs/apk/debug/*.apk

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Bannière 16:9 affichée dans la liste des applis de la TV (obligatoire pour une appli "Leanback").
+    C'est un dessin vectoriel : il reste net à toutes les tailles.
+    Motif volontairement générique : un bouton "lecture" dans un cercle.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+
+    <!-- Fond sombre -->
+    <path android:fillColor="#101418" android:pathData="M0,0h320v180h-320z" />
+
+    <!-- Cercle d'accent -->
+    <path
+        android:fillColor="#1E8C7E"
+        android:pathData="M160,90m-58,0a58,58 0,1 1,116 0a58,58 0,1 1,-116 0" />
+
+    <!-- Triangle "lecture" -->
+    <path android:fillColor="#FFFFFF" android:pathData="M142,62L142,118L190,90Z" />
+</vector>
