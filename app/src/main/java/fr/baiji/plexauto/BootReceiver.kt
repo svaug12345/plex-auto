@@ -21,11 +21,11 @@ class BootReceiver : BroadcastReceiver() {
 
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED -> {
-                Log.i("PlexAuto", "Démarrage TV détecté")
+                EventLog.add(context, "Démarrage complet de la TV détecté")
                 WatchService.start(context, launchAfterBoot = true)
             }
             Intent.ACTION_MY_PACKAGE_REPLACED -> {
-                Log.i("PlexAuto", "Mise à jour de Plex Auto → service relancé")
+                EventLog.add(context, "Appli mise à jour → surveillance relancée")
                 WatchService.start(context, launchAfterBoot = false)
             }
         }

@@ -11,6 +11,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 
@@ -24,6 +25,7 @@ import android.widget.Toast
 class MainActivity : Activity() {
 
     private lateinit var statusText: TextView
+    private lateinit var eventsText: TextView // v1.4.1 : derniers événements
     private lateinit var toggleButton: Button
     private lateinit var targetButton: Button
     private lateinit var urlField: EditText
@@ -127,7 +129,22 @@ class MainActivity : Activity() {
         root.addView(reminderButton)
         root.addView(testButton)
         root.addView(updateButton)
-        setContentView(root)
+
+        // v1.4.1 : journal des derniers événements, en petit sous les boutons (diagnostic)
+        eventsText = TextView(this).apply {
+            setTextColor(Color.parseColor("#8aa3a8"))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            setPadding(0, dp(16), 0, 0)
+        }
+        root.addView(eventsText)
+
+        // ScrollView : l'écran peut maintenant dépasser la hauteur de la TV ; la croix
+        // directionnelle fait défiler automatiquement jusqu'au bouton sélectionné.
+        setContentView(ScrollView(this).apply {
+            setBackgroundColor(Color.parseColor("#101418"))
+            isFillViewport = true
+            addView(root)
+        })
 
         // Si l'automatisme est actif, on s'assure que le service tourne
         // (utile juste après la première installation, avant tout redémarrage).
@@ -247,6 +264,10 @@ class MainActivity : Activity() {
             )
         }
         toggleButton.text = getString(if (enabled) R.string.btn_disable else R.string.btn_enable)
+        // v1.4.1 : derniers événements (le plus récent en haut)
+        val events = EventLog.read(this)
+        eventsText.text = "Derniers événements :\n" +
+            (if (events.isEmpty()) "(aucun pour l'instant)" else events.joinToString("\n"))
         targetButton.text = getString(
             if (target == Prefs.Target.PLEX) R.string.btn_to_dashboard else R.string.btn_to_plex
         )

@@ -39,15 +39,21 @@ class WatchService : Service() {
         if (Prefs.isEnabled(this) && now - lastLaunchAt > 5_000) {
             lastLaunchAt = now
             PlexLauncher.launchTarget(this) // Plex ou dashboard, selon le réglage
+        } else {
+            EventLog.add(this, "Lancement ignoré (désactivé ou doublon)")
         }
     }
 
     /** Récepteur qui écoute le rallumage de l'écran (sortie de veille). */
     private val screenOnReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_SCREEN_ON) {
-                Log.i(TAG, "Écran rallumé → Plex dans ${Prefs.DELAY_AFTER_WAKE_MS} ms")
-                scheduleLaunch(Prefs.DELAY_AFTER_WAKE_MS)
+            when (intent.action) {
+                Intent.ACTION_SCREEN_ON -> {
+                    EventLog.add(context, "Écran rallumé → ouverture dans ${Prefs.DELAY_AFTER_WAKE_MS / 1000} s")
+                    scheduleLaunch(Prefs.DELAY_AFTER_WAKE_MS)
+                }
+                // v1.4.1 : noté seulement pour le diagnostic (vérifier que la TV prévient bien)
+                Intent.ACTION_SCREEN_OFF -> EventLog.add(context, "Écran éteint (veille)")
             }
         }
     }
@@ -68,13 +74,13 @@ class WatchService : Service() {
 
         // 2) On s'abonne à l'événement "écran rallumé".
         //    RECEIVER_NOT_EXPORTED (Android 13+) : seules les diffusions du système nous parviennent.
-        val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
+        val filter = IntentFilter(Intent.ACTION_SCREEN_ON).apply { addAction(Intent.ACTION_SCREEN_OFF) }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(screenOnReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             registerReceiver(screenOnReceiver, filter)
         }
-        Log.i(TAG, "Service démarré, en attente des sorties de veille")
+        EventLog.add(this, "Surveillance démarrée")
     }
 
     /**
@@ -83,7 +89,7 @@ class WatchService : Service() {
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.getBooleanExtra(EXTRA_LAUNCH_AFTER_BOOT, false) == true) {
-            Log.i(TAG, "Démarrage TV → Plex dans ${Prefs.DELAY_AFTER_BOOT_MS} ms")
+            EventLog.add(this, "Démarrage TV → ouverture dans ${Prefs.DELAY_AFTER_BOOT_MS / 1000} s")
             scheduleLaunch(Prefs.DELAY_AFTER_BOOT_MS)
         }
         // START_STICKY : si Android tue le service par manque de mémoire, il le relance seul.
@@ -98,6 +104,7 @@ class WatchService : Service() {
 
     override fun onDestroy() {
         // On se désabonne proprement, sinon Android signale une "fuite" de récepteur.
+        EventLog.add(this, "Surveillance arrêtée")
         handler.removeCallbacks(launchRunnable)
         unregisterReceiver(screenOnReceiver)
         super.onDestroy()

@@ -97,10 +97,11 @@ object PlexLauncher {
     /** Envoie la demande d'ouverture au système, en attrapant les erreurs pour ne jamais planter. */
     private fun start(context: Context, intent: Intent, label: String): Boolean = try {
         context.startActivity(intent)
-        Log.i(TAG, "$label lancé")
+        EventLog.add(context, "$label : ouverture demandée")
         true
     } catch (e: Exception) {
         Log.e(TAG, "Impossible de lancer $label", e)
+        EventLog.add(context, "ÉCHEC ouverture $label : ${e.message}")
         false
     }
 }

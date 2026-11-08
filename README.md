@@ -10,7 +10,7 @@ Mini-appli Android TV / Google TV qui ouvre automatiquement **Plex** ou le **das
 un écran stylisé « **Les tâches du jour sont faites ?** » avec les tâches du jour de chaque enfant
 (lues dans le Google Sheet « Family tasks »), puis deux boutons : *Voir le dashboard* ou *Plex*.
 
-Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.4.0**.
+Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.4.1**.
 
 > Pour l'instant le rappel s'affiche **à chaque allumage**, sans horaire (`REMINDER_ALL_DAY = true` dans `Prefs.kt`).
 > Pour revenir au créneau 17h – 19h30 : passer cette constante à `false`.
@@ -25,6 +25,7 @@ Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.4.0**.
 | `DashboardActivity.kt` | Navigateur intégré plein écran (WebView) qui affiche le dashboard |
 | `TaskCheckActivity.kt` | Écran de rappel : charge `baiji.fr/famille/rappel.html` (copie locale si hors ligne), y envoie les tâches du Sheet |
 | `assets/rappel.html` | Copie de secours de l'écran de rappel (la vraie est sur le site, dépôt svaug12345.github.io) |
+| `EventLog.kt` | Journal des 20 derniers événements, affiché en bas des réglages (diagnostic) |
 | `Updater.kt` / `InstallReceiver.kt` | Mise à jour depuis la TV : dernière Release GitHub → téléchargement → installateur Android |
 | `Prefs.kt` | Réglages : activé/désactivé, cible, adresse du dashboard, créneau du rappel, délais |
 | `MainActivity.kt` | Écran de réglages : état, activer/désactiver, choix de la cible, adresse, test |
@@ -118,6 +119,7 @@ adb logcat -s PlexAuto
 
 ## Historique
 
+- **1.4.1** — journal des 20 derniers événements (démarrage, veille, rallumage, ouvertures) affiché dans les réglages, pour le diagnostic.
 - **1.4.0** — écran de rappel chargé depuis baiji.fr (copie locale de secours) ; bouton discret « Menu TV » ; bouton « Mettre à jour » dans les réglages (Releases GitHub) ; clé de signature fixe (secrets GitHub).
 - **1.3.1** — rappel affiché à chaque allumage (sans horaire) ; bouton « Oui, oui, je le jure ! → Plex ».
 - **1.3.0** — écran de rappel stylisé (HTML) avec les tâches du jour par enfant ; adresse par défaut `baiji.fr/famille/?tv`.
