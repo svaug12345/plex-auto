@@ -134,7 +134,14 @@ class MainActivity : Activity() {
         eventsText = TextView(this).apply {
             setTextColor(Color.parseColor("#8aa3a8"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-            setPadding(0, dp(16), 0, 0)
+            setPadding(dp(8), dp(16), dp(8), dp(8))
+            // v1.4.2 : "focusable" = la croix directionnelle peut s'y arrêter, ce qui fait
+            // défiler l'écran jusqu'au journal (sinon il restait caché sous le dernier bouton)
+            isFocusable = true
+            // Petit cadre turquoise quand il est sélectionné, pour savoir où on est
+            setOnFocusChangeListener { v, hasFocus ->
+                v.setBackgroundColor(if (hasFocus) Color.parseColor("#1a2a30") else Color.TRANSPARENT)
+            }
         }
         root.addView(eventsText)
 

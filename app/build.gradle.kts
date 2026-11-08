@@ -18,8 +18,8 @@ android {
         // ⚠️ À incrémenter à chaque mise à jour :
         //   versionCode = entier qui DOIT augmenter pour que la TV accepte la mise à jour
         //   versionName = numéro lisible affiché à l'utilisateur
-        versionCode = 7
-        versionName = "1.4.1" // 1.4.1 : journal des derniers événements dans les réglages (diagnostic)
+        versionCode = 8
+        versionName = "1.4.2" // 1.4.2 : journal des événements accessible à la télécommande
     }
 
     // v1.4.0 : clé de signature FIXE. Android n'accepte une mise à jour que si elle est signée
