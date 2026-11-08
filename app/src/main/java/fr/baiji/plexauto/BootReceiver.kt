@@ -25,7 +25,13 @@ class BootReceiver : BroadcastReceiver() {
                 WatchService.start(context, launchAfterBoot = true)
             }
             Intent.ACTION_MY_PACKAGE_REPLACED -> {
-                EventLog.add(context, "Appli mise à jour → surveillance relancée")
+                // v1.5.1 : on note si la mise à jour a fait sauter la permission « par-dessus »
+                val overlayOk = android.provider.Settings.canDrawOverlays(context)
+                EventLog.add(
+                    context,
+                    "Appli mise à jour → surveillance relancée" +
+                        (if (overlayOk) " (permission par-dessus OK)" else " ⛔ permission par-dessus PERDUE")
+                )
                 WatchService.start(context, launchAfterBoot = false)
             }
         }

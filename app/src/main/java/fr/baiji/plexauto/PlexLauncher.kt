@@ -98,7 +98,13 @@ object PlexLauncher {
     /** Envoie la demande d'ouverture au système, en attrapant les erreurs pour ne jamais planter. */
     private fun start(context: Context, intent: Intent, label: String): Boolean = try {
         context.startActivity(intent)
-        EventLog.add(context, "$label : ouverture demandée")
+        // v1.5.1 : sans la permission « par-dessus les autres applis », Android bloque
+        // EN SILENCE les ouvertures lancées en arrière-plan (allumage). On le signale clairement.
+        if (!android.provider.Settings.canDrawOverlays(context)) {
+            EventLog.add(context, "⛔ $label : ouverture sûrement BLOQUÉE (permission par-dessus manquante)")
+        } else {
+            EventLog.add(context, "$label : ouverture demandée")
+        }
         true
     } catch (e: Exception) {
         Log.e(TAG, "Impossible de lancer $label", e)
