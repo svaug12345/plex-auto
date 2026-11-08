@@ -18,8 +18,8 @@ android {
         // ⚠️ À incrémenter à chaque mise à jour :
         //   versionCode = entier qui DOIT augmenter pour que la TV accepte la mise à jour
         //   versionName = numéro lisible affiché à l'utilisateur
-        versionCode = 4
-        versionName = "1.3.0" // 1.3.0 : écran de rappel stylisé avec les tâches du jour
+        versionCode = 5
+        versionName = "1.3.1" // 1.3.1 : rappel à chaque allumage, bouton « Oui, oui, je le jure ! »
     }
 
     buildTypes {

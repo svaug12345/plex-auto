@@ -35,6 +35,10 @@ object Prefs {
     const val REMINDER_START_MIN = 17 * 60
     const val REMINDER_END_MIN = 19 * 60 + 30
 
+    /** v1.3.1 : true = le rappel s'affiche à CHAQUE allumage, quelle que soit l'heure
+     *  (le créneau ci-dessus est alors ignoré). Repasser à false pour réactiver le créneau. */
+    const val REMINDER_ALL_DAY = true
+
     /** Ce qu'on ouvre automatiquement : Plex ou le dashboard famille. */
     enum class Target { PLEX, DASHBOARD }
 
@@ -85,6 +89,7 @@ object Prefs {
 
     /** Sommes-nous dans le créneau du rappel, à l'heure locale de la TV ? */
     fun isInReminderWindow(): Boolean {
+        if (REMINDER_ALL_DAY) return true // pas d'horaire pour l'instant : toujours "dans le créneau"
         // java.time est disponible depuis Android 8 (notre minSdk) : pas besoin de Calendar
         val now = java.time.LocalTime.now()
         val minutes = now.hour * 60 + now.minute
@@ -94,6 +99,7 @@ object Prefs {
 
     /** Texte du créneau, pour l'afficher dans les réglages (ex. "17h00 – 19h30"). */
     fun reminderWindowLabel(): String {
+        if (REMINDER_ALL_DAY) return "(à chaque allumage)"
         fun fmt(m: Int) = "%dh%02d".format(m / 60, m % 60)
         return "${fmt(REMINDER_START_MIN)} – ${fmt(REMINDER_END_MIN)}"
     }

@@ -10,7 +10,10 @@ Mini-appli Android TV / Google TV qui ouvre automatiquement **Plex** ou le **das
 un écran stylisé « **Les tâches du jour sont faites ?** » avec les tâches du jour de chaque enfant
 (lues dans le Google Sheet « Family tasks »), puis deux boutons : *Voir le dashboard* ou *Plex*.
 
-Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.3.0**.
+Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.3.1**.
+
+> Pour l'instant le rappel s'affiche **à chaque allumage**, sans horaire (`REMINDER_ALL_DAY = true` dans `Prefs.kt`).
+> Pour revenir au créneau 17h – 19h30 : passer cette constante à `false`.
 
 ## Comment ça marche
 
@@ -95,6 +98,7 @@ adb logcat -s PlexAuto
 
 ## Historique
 
+- **1.3.1** — rappel affiché à chaque allumage (sans horaire) ; bouton « Oui, oui, je le jure ! → Plex ».
 - **1.3.0** — écran de rappel stylisé (HTML) avec les tâches du jour par enfant ; adresse par défaut `baiji.fr/famille/?tv`.
 - **1.2.0** — question « Est-ce que les tâches sont faites ?? » de 17h à 19h30, puis choix Plex / dashboard ; rappel désactivable.
 - **1.1.0** — choix de la cible (Plex ou dashboard famille en plein écran), adresse réglable, appli renommée « Démarrage Auto ».

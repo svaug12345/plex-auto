@@ -159,7 +159,8 @@ class MainActivity : Activity() {
             appendLine(
                 if (Prefs.isReminderEnabled(this@MainActivity))
                     "❓ Rappel des tâches ${Prefs.reminderWindowLabel()} : activé" +
-                        (if (Prefs.isInReminderWindow()) " (en cours maintenant)" else "")
+                        // "(en cours maintenant)" n'a de sens que si un créneau horaire est actif
+                        (if (!Prefs.REMINDER_ALL_DAY && Prefs.isInReminderWindow()) " (en cours maintenant)" else "")
                 else "❓ Rappel des tâches : désactivé"
             )
             // L'état de Plex n'a d'intérêt que si c'est la cible
