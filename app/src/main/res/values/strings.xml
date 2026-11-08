@@ -19,5 +19,7 @@
     <string name="btn_update_checking">Recherche en cours…</string>
     <string name="btn_update_install">⬆️ Installer la version %1$s</string>
     <string name="btn_update_progress">Téléchargement… %1$d %%</string>
+    <!-- v1.6.0 : texte affiché par la TV dans ses réglages d'accessibilité -->
+    <string name="accessibility_description">Permet à Démarrage Auto d\'afficher le rappel des tâches à l\'allumage de la TV. Ne lit rien à l\'écran.</string>
     <string name="plex_missing">Impossible d\'ouvrir la cible (Plex introuvable ?)</string>
 </resources>

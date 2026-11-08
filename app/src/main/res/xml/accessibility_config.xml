@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    v1.6.0 : configuration du service d'accessibilité, volontairement « vide ».
+    - accessibilityEventTypes = typeAnnouncement : un type d'événement très rare, juste parce
+      qu'Android en exige un ; le service n'en fait rien.
+    - canRetrieveWindowContent = false : le service ne PEUT PAS lire ce qui est affiché.
+    Son seul rôle : quand il est actif, Android autorise l'appli à ouvrir le rappel depuis
+    l'arrière-plan (au démarrage et en sortie de veille), sans la permission « par-dessus »
+    que la TV retire à chaque redémarrage.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeAnnouncement"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:canRetrieveWindowContent="false"
+    android:description="@string/accessibility_description"
+    android:notificationTimeout="1000" />

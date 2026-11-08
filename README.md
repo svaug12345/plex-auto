@@ -10,7 +10,7 @@ Mini-appli Android TV / Google TV qui ouvre automatiquement **Plex** ou le **das
 un écran stylisé « **Les tâches du jour sont faites ?** » avec les tâches du jour de chaque enfant
 (lues dans le Google Sheet « Family tasks »), puis deux boutons : *Voir le dashboard* ou *Plex*.
 
-Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.5.1**.
+Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.6.0**.
 
 > **Depuis la v1.5.0, chaque allumage ouvre TOUJOURS l'écran de rappel (Pass VIP TV).** Plex et le dashboard
 > s'ouvrent depuis ses boutons ; le choix de cible et l'interrupteur du rappel ont disparu des réglages.
@@ -29,6 +29,7 @@ Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.5.1**.
 | `TaskCheckActivity.kt` | Écran de rappel : charge `baiji.fr/famille/rappel.html` (copie locale si hors ligne), y envoie les tâches du Sheet |
 | `assets/rappel.html` | Copie de secours de l'écran de rappel (la vraie est sur le site, dépôt svaug12345.github.io) |
 | `ScreenState.kt` | Notre écran est-il visible ? A-t-il été quitté volontairement ? (pour le rattrapage) |
+| `WakeAccessibilityService.kt` | Service d'accessibilité « vide » (ne lit rien) : autorise l'ouverture du rappel en arrière-plan, même après un redémarrage |
 | `EventLog.kt` | Journal des 20 derniers événements, affiché en bas des réglages (diagnostic) |
 | `Updater.kt` / `InstallReceiver.kt` | Mise à jour depuis la TV : dernière Release GitHub → téléchargement → installateur Android |
 | `Prefs.kt` | Réglages : activé/désactivé, cible, adresse du dashboard, créneau du rappel, délais |
@@ -81,6 +82,17 @@ adb shell appops set fr.baiji.plexauto SYSTEM_ALERT_WINDOW allow
 
 # v1.4.0 : autoriser l'appli à installer ses propres mises à jour
 adb shell appops set fr.baiji.plexauto REQUEST_INSTALL_PACKAGES allow
+
+# v1.6.0 : activer le service d'accessibilité « vide » (INDISPENSABLE : la TV retire la permission
+# « par-dessus » à chaque démarrage complet ; l'accessibilité, elle, survit aux redémarrages).
+# 1) Voir s'il y a déjà des services d'accessibilité actifs (ex. Projectivy) :
+adb shell settings get secure enabled_accessibility_services
+# 2a) Si la réponse est « null » :
+adb shell settings put secure enabled_accessibility_services fr.baiji.plexauto/fr.baiji.plexauto.WakeAccessibilityService
+# 2b) Sinon, AJOUTER le nôtre derrière l'existant, séparé par « : » (sans effacer les autres) :
+#     adb shell settings put secure enabled_accessibility_services <existant>:fr.baiji.plexauto/fr.baiji.plexauto.WakeAccessibilityService
+# 3) Allumer l'accessibilité :
+adb shell settings put secure accessibility_enabled 1
 ```
 
 Depuis un téléphone (Bugjaeger) : mêmes commandes, sans `adb shell` devant.
@@ -123,6 +135,7 @@ adb logcat -s PlexAuto
 
 ## Historique
 
+- **1.6.0** — service d'accessibilité « vide » : la TV retire la permission « par-dessus » à chaque démarrage complet, l'accessibilité la remplace (et survit aux redémarrages).
 - **1.5.1** — le journal signale « ⛔ ouverture bloquée » quand la permission par-dessus manque, et indique après chaque mise à jour si cette permission a survécu.
 - **1.5.0** — l'allumage ouvre toujours l'écran de rappel ; réglages simplifiés (plus de choix Plex/dashboard ni d'interrupteur du rappel ; l'adresse sert au bouton « Dashboard »).
 - **1.4.3** — « rattrapage » : après un démarrage complet (20 s et 40 s) ou un rallumage (8 s), le rappel ou le dashboard est remis devant s'il a été recouvert sans réponse ; copie de secours du rappel mise à jour (Non + alerte, boutons discrets).

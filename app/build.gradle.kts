@@ -18,8 +18,8 @@ android {
         // ⚠️ À incrémenter à chaque mise à jour :
         //   versionCode = entier qui DOIT augmenter pour que la TV accepte la mise à jour
         //   versionName = numéro lisible affiché à l'utilisateur
-        versionCode = 11
-        versionName = "1.5.1" // 1.5.1 : le journal signale les ouvertures bloquées faute de permission
+        versionCode = 12
+        versionName = "1.6.0" // 1.6.0 : service d'accessibilité pour ouvrir le rappel même après un redémarrage
     }
 
     // v1.4.0 : clé de signature FIXE. Android n'accepte une mise à jour que si elle est signée

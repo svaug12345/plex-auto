@@ -100,8 +100,9 @@ object PlexLauncher {
         context.startActivity(intent)
         // v1.5.1 : sans la permission « par-dessus les autres applis », Android bloque
         // EN SILENCE les ouvertures lancées en arrière-plan (allumage). On le signale clairement.
-        if (!android.provider.Settings.canDrawOverlays(context)) {
-            EventLog.add(context, "⛔ $label : ouverture sûrement BLOQUÉE (permission par-dessus manquante)")
+        // v1.6.0 : l'un OU l'autre suffit (permission « par-dessus » ou service d'accessibilité)
+        if (!android.provider.Settings.canDrawOverlays(context) && !WakeAccessibilityService.isEnabled(context)) {
+            EventLog.add(context, "⛔ $label : ouverture sûrement BLOQUÉE (ni permission par-dessus ni accessibilité)")
         } else {
             EventLog.add(context, "$label : ouverture demandée")
         }

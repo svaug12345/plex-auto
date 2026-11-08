@@ -225,10 +225,17 @@ class MainActivity : Activity() {
             appendLine("🎟️ À l'allumage : écran de rappel (Pass VIP TV)")
             // Plex reste utile : c'est le bouton « Oui, oui, je le jure ! » du rappel
             appendLine(if (plexOk) "✅ Plex est installé" else "❌ Plex n'est pas installé")
+            // v1.6.0 : ce qui autorise l'ouverture automatique. L'accessibilité suffit et survit
+            // aux redémarrages ; la permission « par-dessus » est retirée par la TV à chaque démarrage.
+            val a11yOk = WakeAccessibilityService.isEnabled(this@MainActivity)
             appendLine(
-                if (overlayOk) "✅ Permission « par-dessus les autres applis » accordée"
-                else "❌ Permission manquante : sans elle, Android bloque l'ouverture automatique.\n" +
-                    "   Commande ADB : appops set $packageName SYSTEM_ALERT_WINDOW allow"
+                if (a11yOk) "✅ Service d'accessibilité actif : ouverture automatique autorisée"
+                else "❌ Service d'accessibilité inactif : l'ouverture automatique sera bloquée après un redémarrage.\n" +
+                    "   Voir les commandes ADB dans le README (settings put secure …)"
+            )
+            appendLine(
+                if (overlayOk) "✅ Permission « par-dessus » (secours) accordée"
+                else "ℹ️ Permission « par-dessus » absente (normal après un redémarrage, l'accessibilité suffit)"
             )
             // v1.4.0 : l'appli a-t-elle le droit d'installer ses mises à jour ?
             appendLine(
