@@ -15,16 +15,16 @@ jobs:
 
     steps:
       - name: Récupérer le code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Installer Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
 
       - name: Préparer Gradle (avec cache pour accélérer les builds suivants)
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       # Si les fichiers ont été envoyés via le site GitHub, le droit d'exécution du script saute :
       # on le remet systématiquement.
@@ -35,7 +35,7 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Publier l'APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: PlexAuto-apk
           path: app/build/outputs/apk/debug/*.apk

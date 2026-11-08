@@ -11,8 +11,17 @@ object Prefs {
     /** Identifiant (package) de l'appli Plex sur Android TV / Google TV. */
     const val PLEX_PACKAGE = "com.plexapp.android"
 
-    /** Adresse du dashboard proposée par défaut (modifiable depuis l'écran de réglages). */
-    const val DEFAULT_DASHBOARD_URL = "https://baiji.fr/"
+    /** Adresse du dashboard proposée par défaut (modifiable depuis l'écran de réglages).
+     *  "?tv" active le mode TV du dashboard : sombre, dense, lisible depuis le canapé. */
+    const val DEFAULT_DASHBOARD_URL = "https://baiji.fr/famille/?tv"
+
+    /** Ancienne valeur par défaut (v1.1.0 – v1.2.0), remplacée automatiquement par la nouvelle. */
+    private const val OLD_DEFAULT_URL = "https://baiji.fr/"
+
+    /** Google Sheet « Family tasks » publié en TSV : le même lien que le dashboard et le Kindle.
+     *  Colonnes : A Mois | B Jour | C Date (JJ/MM/AAAA) | D Qui | E Tâches */
+    const val TASKS_TSV_URL =
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vRGC5e1KLZdKKeTUSLC8aqJXHvPphh1ceso4-yYJAUtbyZGPPhriMMtEQpeL4cjcrbQfcp6WOM_RUT2/pub?gid=647675679&single=true&output=tsv"
 
     /** Délai avant d'ouvrir la cible après un VRAI démarrage : on laisse le temps
      *  au launcher (Google TV ou Projectivy) de s'afficher, sinon il repasserait devant. */
@@ -57,8 +66,11 @@ object Prefs {
     }
 
     /** Adresse web du dashboard. */
-    fun dashboardUrl(context: Context): String =
-        sp(context).getString(KEY_URL, null) ?: DEFAULT_DASHBOARD_URL
+    fun dashboardUrl(context: Context): String {
+        val saved = sp(context).getString(KEY_URL, null)
+        // Si rien n'est enregistré, ou si c'est l'ancienne adresse par défaut, on prend la nouvelle
+        return if (saved == null || saved == OLD_DEFAULT_URL) DEFAULT_DASHBOARD_URL else saved
+    }
 
     fun setDashboardUrl(context: Context, url: String) {
         sp(context).edit().putString(KEY_URL, url).apply()

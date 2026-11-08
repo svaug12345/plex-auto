@@ -7,9 +7,10 @@ Mini-appli Android TV / Google TV qui ouvre automatiquement **Plex** ou le **das
 - à chaque **sortie de veille** (allumage à la télécommande), au bout de 2 s.
 
 **Entre 17h00 et 19h30**, au lieu d'ouvrir directement la cible, la TV affiche d'abord
-« **Est-ce que les tâches sont faites ??** » avec deux boutons : *Voir le dashboard* ou *Aller sur Plex*.
+un écran stylisé « **Les tâches du jour sont faites ?** » avec les tâches du jour de chaque enfant
+(lues dans le Google Sheet « Family tasks »), puis deux boutons : *Voir le dashboard* ou *Plex*.
 
-Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.2.0**.
+Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.3.0**.
 
 ## Comment ça marche
 
@@ -19,7 +20,8 @@ Testée pour une Philips 55OLED910 (Google TV). Version actuelle : **1.2.0**.
 | `WatchService.kt` | Service permanent qui écoute « écran rallumé » (sortie de veille) → programme la cible |
 | `PlexLauncher.kt` | Ouvre la cible : Plex (version TV en priorité) ou le dashboard |
 | `DashboardActivity.kt` | Navigateur intégré plein écran (WebView) qui affiche le dashboard |
-| `TaskCheckActivity.kt` | Écran « Est-ce que les tâches sont faites ?? » (17h – 19h30), puis Plex ou dashboard |
+| `TaskCheckActivity.kt` | Écran de rappel (17h – 19h30) : télécharge les tâches du Sheet, affiche `rappel.html` |
+| `assets/rappel.html` | Le design de l'écran de rappel (HTML/CSS aux couleurs du dashboard) — modifiable librement |
 | `Prefs.kt` | Réglages : activé/désactivé, cible, adresse du dashboard, créneau du rappel, délais |
 | `MainActivity.kt` | Écran de réglages : état, activer/désactiver, choix de la cible, adresse, test |
 
@@ -93,6 +95,7 @@ adb logcat -s PlexAuto
 
 ## Historique
 
+- **1.3.0** — écran de rappel stylisé (HTML) avec les tâches du jour par enfant ; adresse par défaut `baiji.fr/famille/?tv`.
 - **1.2.0** — question « Est-ce que les tâches sont faites ?? » de 17h à 19h30, puis choix Plex / dashboard ; rappel désactivable.
 - **1.1.0** — choix de la cible (Plex ou dashboard famille en plein écran), adresse réglable, appli renommée « Démarrage Auto ».
 - **1.0.0** — première version : lancement au démarrage et à la sortie de veille, écran de réglages.

@@ -1,104 +1,123 @@
 package fr.baiji.plexauto
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.graphics.Color
-import android.graphics.Typeface
 import android.os.Bundle
-import android.util.TypedValue
-import android.view.Gravity
+import android.util.Log
 import android.view.KeyEvent
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.webkit.JavascriptInterface
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 
 /**
- * Écran « Est-ce que les tâches sont faites ? », affiché à la place de la cible
+ * Écran « Les tâches du jour sont faites ? », affiché à la place de la cible
  * quand la TV s'allume pendant le créneau du rappel (17h00 – 19h30 par défaut).
  *
- * Deux boutons, navigables à la télécommande :
- *  - « Plex »      → ouvre Plex
- *  - « Dashboard » → ouvre le dashboard famille (pour vérifier ses tâches)
+ * v1.3.0 : l'écran est une page HTML stylisée (assets/rappel.html) affichée dans une WebView.
+ * Le partage du travail :
+ *   - la page HTML s'occupe de l'AFFICHAGE (style, cartes par enfant, boutons) ;
+ *   - ce code Kotlin TÉLÉCHARGE les tâches du Google Sheet et ouvre Plex / le dashboard.
  *
- * La touche Retour est neutralisée : il faut choisir l'un des deux.
+ * Pourquoi télécharger côté Kotlin plutôt qu'en JavaScript ? Une page chargée depuis l'APK
+ * n'a pas d'"adresse web" à elle, et certains serveurs refusent alors les requêtes (règles CORS).
+ * En Kotlin, ces règles n'existent pas : c'est plus fiable.
  */
 class TaskCheckActivity : Activity() {
 
+    private lateinit var webView: WebView
+
+    @SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Conteneur vertical centré, fond sombre
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setBackgroundColor(Color.parseColor("#101418"))
-            setPadding(dp(64), dp(48), dp(64), dp(48))
+        webView = WebView(this).apply {
+            setBackgroundColor(Color.parseColor("#050f12")) // même fond que la page : pas de flash blanc
+            settings.javaScriptEnabled = true
+
+            // "Pont" entre JavaScript et Kotlin : dans la page, Android.openPlex() appellera
+            // la méthode openPlex() de la classe Bridge ci-dessous.
+            addJavascriptInterface(Bridge(), "Android")
+
+            webViewClient = object : WebViewClient() {
+                // La page est prête : on peut lancer le téléchargement des tâches
+                override fun onPageFinished(view: WebView, url: String) = fetchTasks()
+            }
+        }
+        setContentView(webView)
+
+        // file:///android_asset/ = le dossier "assets" de l'APK
+        webView.loadUrl("file:///android_asset/rappel.html")
+    }
+
+    /** Si l'écran est déjà affiché et que la TV se rallume, on actualise les tâches. */
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        webView.reload()
+    }
+
+    /**
+     * Télécharge le Google Sheet "Family tasks" (format TSV) dans un fil d'exécution séparé
+     * (Android interdit les accès réseau sur le fil principal, qui gère l'affichage),
+     * puis transmet le texte à la fonction JavaScript showTasks().
+     */
+    private fun fetchTasks() {
+        Thread {
+            val tsv: String? = try {
+                val conn = URL(Prefs.TASKS_TSV_URL).openConnection() as HttpURLConnection
+                conn.connectTimeout = 10_000
+                conn.readTimeout = 10_000
+                conn.useCaches = false
+                // Google répond parfois par une redirection : HttpURLConnection la suit tout seul
+                conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+            } catch (e: Exception) {
+                Log.w("PlexAuto", "Tâches indisponibles", e)
+                null
+            }
+            // JSONObject.quote() transforme le texte en chaîne JavaScript valide
+            // (guillemets, tabulations et retours à la ligne correctement échappés).
+            val arg = if (tsv == null) "null" else JSONObject.quote(tsv)
+            // Retour sur le fil principal : seul lui a le droit de toucher à la WebView
+            runOnUiThread {
+                if (!isDestroyed) webView.evaluateJavascript("showTasks($arg)", null)
+            }
+        }.start()
+    }
+
+    /**
+     * Méthodes appelables depuis la page HTML. @JavascriptInterface est obligatoire :
+     * sans cette annotation, Android cache la méthode à JavaScript (sécurité).
+     * Elles s'exécutent sur un fil "JavaScript" : on repasse sur le fil principal avec runOnUiThread.
+     */
+    inner class Bridge {
+        @JavascriptInterface
+        fun openPlex() = runOnUiThread {
+            PlexLauncher.launchPlex(this@TaskCheckActivity)
+            finish() // on ferme le rappel pour qu'il ne reste pas "derrière" Plex
         }
 
-        // Le gros message, lisible depuis le canapé
-        val question = TextView(this).apply {
-            text = getString(R.string.task_question)
-            setTextColor(Color.WHITE)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 52f)
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
-        }
-
-        // Petite ligne d'explication sous la question
-        val hint = TextView(this).apply {
-            text = getString(R.string.task_hint)
-            setTextColor(Color.parseColor("#C8D0D8"))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f)
-            gravity = Gravity.CENTER
-            setPadding(0, dp(16), 0, dp(40))
-        }
-
-        // Rangée horizontale avec les deux boutons
-        val row = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-        }
-
-        val plexButton = bigButton(getString(R.string.task_btn_plex)) {
-            PlexLauncher.launchPlex(this)
-            finish() // on ferme la question pour qu'elle ne reste pas "derrière" Plex
-        }
-        val dashboardButton = bigButton(getString(R.string.task_btn_dashboard)) {
-            PlexLauncher.launchDashboard(this)
+        @JavascriptInterface
+        fun openDashboard() = runOnUiThread {
+            PlexLauncher.launchDashboard(this@TaskCheckActivity)
             finish()
         }
-
-        // Marges entre les deux boutons
-        val lp = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(dp(24), 0, dp(24), 0) }
-        row.addView(dashboardButton, lp)
-        row.addView(plexButton, lp)
-
-        root.addView(question)
-        root.addView(hint)
-        root.addView(row)
-        setContentView(root)
-
-        // Focus initial sur « Dashboard » : on pousse gentiment à aller vérifier ses tâches 😉
-        dashboardButton.requestFocus()
     }
 
-    /** Fabrique un gros bouton lisible à 3 m, avec l'action à exécuter au clic. */
-    private fun bigButton(label: String, onClick: () -> Unit) = Button(this).apply {
-        text = label
-        isAllCaps = false
-        setTextSize(TypedValue.COMPLEX_UNIT_SP, 26f)
-        setPadding(dp(32), dp(16), dp(32), dp(16))
-        setOnClickListener { onClick() }
-    }
-
-    /** On ignore la touche Retour : la question attend une vraie réponse. */
+    /**
+     * La touche Retour est neutralisée : la question attend une vraie réponse.
+     * En renvoyant true sans "suivre" l'appui, Android ne déclenche pas le retour.
+     * (Le bouton Accueil, lui, ramène toujours au menu normal de la TV.)
+     */
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) return true
         return super.onKeyDown(keyCode, event)
     }
 
-    /** Convertit des "dp" en pixels réels. */
-    private fun dp(value: Int): Int =
-        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value.toFloat(), resources.displayMetrics).toInt()
+    override fun onDestroy() {
+        webView.destroy() // libère la mémoire de la WebView
+        super.onDestroy()
+    }
 }
